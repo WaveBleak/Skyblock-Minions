@@ -78,19 +78,34 @@ public class Minion {
     }
 
     public void run() {
-        if(runnable != null) {
-            runnable.cancel(); // Undgå flere tasks at køre på samme tid
+        if(taskManager != null) {
+            taskManager.cancel(); // Undgå flere tasks at køre på samme tid
         }
-        runnable = new BukkitRunnable() {
+        if(animationManager != null) {
+            animationManager.cancel();
+        }
+
+        taskManager = new BukkitRunnable() {
             @Override
             public void run() {
                 if(isDisabled) this.cancel();
                 performAction();
             }
         }.runTaskTimer(Minions.getInstance(), getCooldown(), getCooldown());
+
+
+        animationManager = new BukkitRunnable() {
+            private int frames = 1;
+            @Override
+            public void run() {
+                performAnimation(frames);
+                frames++;
+            }
+        }.runTaskTimer(getInstance(), getCooldown() / 4, getCooldown() / 4);
     }
 
-    private BukkitTask runnable = null;
+    private BukkitTask taskManager = null;
+    private BukkitTask animationManager = null;
 
 
     public void performAction() {
@@ -108,6 +123,10 @@ public class Minion {
                 sell();
                 break;
         }
+    }
+
+    public void performAnimation(int frame) {
+
     }
 
     /**
@@ -180,11 +199,13 @@ public class Minion {
         minion.setBasePlate(false);
         minion.setSmall(true);
         minion.setGravity(false);
+        minion.setArms(true);
 
         minion.setHelmet(getSkull());
         minion.setChestplate(getChestplate());
         minion.setLeggings(getLeggings());
         minion.setBoots(getBoots());
+        minion.setItemInHand(getTool());
     }
 
     /**
@@ -192,6 +213,19 @@ public class Minion {
      */
     public void disable() {
         this.isDisabled = true;
+    }
+
+    public ItemStack getTool() {
+        switch (getType()) {
+            case ATTACK:
+                return new ItemStack(Material.IRON_SWORD);
+            case DIG:
+                return new ItemStack(Material.IRON_SPADE);
+            case PICKUP:
+                return new ItemStack(Material.HOPPER);
+            default:
+                return new ItemStack(Material.BLAZE_ROD);
+        }
     }
 
     /**
