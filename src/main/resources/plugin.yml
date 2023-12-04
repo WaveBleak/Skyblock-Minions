@@ -1,3 +1,4 @@
 name: Minions
 version: '${version}'
+depend: [Vault]
 main: dk.spacemc.minions.Minions
