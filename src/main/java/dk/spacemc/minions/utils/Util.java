@@ -9,6 +9,10 @@ import static org.bukkit.Bukkit.getServer;
 
 public class Util {
 
+    /**
+     * Setup et link til Vault pluginnet
+     * @return Om Vault pluginnet findes eller ej
+     */
     public static boolean setupEconomy() {
         RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(Economy.class);
 

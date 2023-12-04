@@ -98,8 +98,10 @@ public class Minion {
             private int frames = 1;
             @Override
             public void run() {
+                if(frames > 4) frames = 1;
                 performAnimation(frames);
                 frames++;
+
             }
         }.runTaskTimer(getInstance(), getCooldown() / 4, getCooldown() / 4);
     }
@@ -125,8 +127,26 @@ public class Minion {
         }
     }
 
+    /**
+     * Sæt armen på minionen i en særlig position
+     * @param frame Den frame, der er igang
+     */
     public void performAnimation(int frame) {
-
+        ArmorStand minion = getMinion();
+        switch (frame) {
+            case 1:
+                // Arm er højt oppe
+                break;
+            case 2:
+                // Arm er lidt oppe
+                break;
+            case 3:
+                // Arm er lidt nede
+                break;
+            case 4:
+                // Arm er langt nede
+                break;
+        }
     }
 
     /**
