@@ -27,8 +27,8 @@ public class Manager {
                 if(dbFile.createNewFile()) {
                     getInstance().getLogger().info("Created new Minions file");
                     List<Minion> datas = new ArrayList<>();
-                    datas.add(new Minion(1, 2, "390f6268-c72e-4206-a8dc-4980cd655845", 5, 5, 5, 6, 6, 6, "world"));
-                    datas.add(new Minion(1, 1, "67b6c55c-948d-4967-99f2-5ff1c254b27f", 10, 10, 10, 11, 11, 11, "world"));
+                    datas.add(new Minion(1, 2, "390f6268-c72e-4206-a8dc-4980cd655845", 5, 5, 5, 6, 6, 6, 0, "world"));
+                    datas.add(new Minion(1, 1, "67b6c55c-948d-4967-99f2-5ff1c254b27f", 10, 10, 10, 11, 11, 11, 0, "world"));
                     saveJsonToFile(datas);
                 }
             }catch (Exception e) {

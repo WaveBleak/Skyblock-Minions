@@ -50,6 +50,7 @@ public class Minion {
     private final double chestX;
     private final double chestY;
     private final double chestZ;
+    private final double yaw;
     private final String world;
     private boolean isDisabled;
 
@@ -67,7 +68,7 @@ public class Minion {
      * @param chestZ z-koordinatet af minionen's associeret kiste
      * @param world navnet på verdenen minionen er i
      */
-    public Minion(int level, int type, String uuidOfOwner, double x, double y, double z, double chestX, double chestY, double chestZ, String world) {
+    public Minion(int level, int type, String uuidOfOwner, double x, double y, double z, double chestX, double chestY, double chestZ, double yaw, String world) {
         this.level = level;
         this.type = type;
         this.uuidOfOwner = uuidOfOwner;
@@ -77,6 +78,7 @@ public class Minion {
         this.chestX = chestX;
         this.chestY = chestY;
         this.chestZ = chestZ;
+        this.yaw = yaw;
         this.world = world;
         this.isDisabled = false;
 
@@ -197,7 +199,6 @@ public class Minion {
 
     /**
      * Denne funktion bliver kaldt hvis det er en ATTACK minion, hver calcCooldown ticks
-
      */
     public void attack() {
         ArmorStand minion = getMinion();
@@ -301,14 +302,13 @@ public class Minion {
      */
     public void spawn() {
         Location spawnLocation = new Location(getWorld(), x, y, z);
+        spawnLocation.setYaw(Float.parseFloat(yaw + "")); // Spaghetti code
         ArmorStand minion = (ArmorStand) getWorld().spawnEntity(spawnLocation, EntityType.ARMOR_STAND);
 
         minion.setBasePlate(false);
         minion.setSmall(true);
         minion.setGravity(false);
         minion.setArms(true);
-
-        minion.setMetadata("invulnerable", new FixedMetadataValue(getInstance(), true));
 
         minion.setHelmet(getSkull());
         minion.setChestplate(getChestplate());
@@ -548,7 +548,14 @@ public class Minion {
     public void remove() {
         getMinion().remove();
         disable();
+        if(getWorld().getBlockAt(getChestLocation()).getType().equals(Material.CHEST)) {
+            getWorld().getBlockAt(getChestLocation()).breakNaturally();
+        }
         getInstance().minions.remove(this);
+    }
+
+    public Location getChestLocation() {
+        return new Location(getWorld(), chestX, chestY, chestZ);
     }
 
     public static boolean isMinion(Entity entity) {
@@ -568,7 +575,17 @@ public class Minion {
     }
 
     public static Minion getMinion(Entity entity) {
-        Optional<Minion> minion = getInstance().minions.stream().filter(x -> x.getMinion().equals(entity)).findAny();
+        if(getInstance().minions == null) {
+            getInstance().getLogger().info("MINIONS IS NULL");
+            return null;
+        }
+        Optional<Minion> minion = getInstance().minions.stream().filter(x -> {
+            if(x.getMinion() == null) {
+                getInstance().getLogger().info("GETMINION IS NULL");
+                return false;
+            }
+            return x.getMinion().equals(entity);
+        }).findAny();
 
         return minion.orElse(null);
     }

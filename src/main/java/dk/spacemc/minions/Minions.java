@@ -3,6 +3,7 @@ package dk.spacemc.minions;
 import dk.spacemc.minions.classes.Minion;
 import dk.spacemc.minions.commands.MinionCommand;
 import dk.spacemc.minions.events.MinionManipulateEvent;
+import dk.spacemc.minions.events.MinionPlaceEvent;
 import dk.spacemc.minions.utils.Manager;
 import dk.spacemc.minions.utils.Util;
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
@@ -40,6 +41,7 @@ public final class Minions extends JavaPlugin {
         api = HolographicDisplaysAPI.get(this);
 
         getServer().getPluginManager().registerEvents(new MinionManipulateEvent(), this);
+        getServer().getPluginManager().registerEvents(new MinionPlaceEvent(), this);
 
         getCommand("minion").setExecutor(new MinionCommand());
 

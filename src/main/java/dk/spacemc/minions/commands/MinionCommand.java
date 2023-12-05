@@ -29,7 +29,7 @@ public class MinionCommand implements CommandExecutor {
                 return false;
             }
 
-            Minion minion = new Minion(1, number, player.getUniqueId().toString(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), chest.getX(), chest.getY(), chest.getZ(), player.getWorld().getName());
+            Minion minion = new Minion(1, number, player.getUniqueId().toString(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), chest.getX(), chest.getY(), chest.getZ(), player.getLocation().getYaw(), player.getWorld().getName());
             minion.spawn();
             minion.run();
             saveMinion(minion);
@@ -52,7 +52,7 @@ public class MinionCommand implements CommandExecutor {
                 return false;
             }
 
-            Minion minion = new Minion(1, number, player.getUniqueId().toString(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), chest.getX(), chest.getY(), chest.getZ(), player.getWorld().getName());
+            Minion minion = new Minion(1, number, player.getUniqueId().toString(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), chest.getX(), chest.getY(), chest.getZ(), player.getLocation().getYaw(), player.getWorld().getName());
             minion.spawn();
             minion.run();
             saveMinion(minion);
