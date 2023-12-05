@@ -2,9 +2,12 @@ package dk.spacemc.minions;
 
 import dk.spacemc.minions.classes.Minion;
 import dk.spacemc.minions.commands.MinionCommand;
+import dk.spacemc.minions.events.MinionManipulateEvent;
 import dk.spacemc.minions.utils.Manager;
 import dk.spacemc.minions.utils.Util;
+import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
@@ -14,6 +17,7 @@ public final class Minions extends JavaPlugin {
 
     private static Minions plugin;
     public Economy economy = null;
+    public static HolographicDisplaysAPI api;
     public Manager manager;
     public List<Minion> minions;
     @Override
@@ -27,6 +31,15 @@ public final class Minions extends JavaPlugin {
         } else {
             System.out.println("Economy couldn't load!");
         }
+        if (!Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays")) {
+            getLogger().severe("*** HolographicDisplays is not installed or not enabled. ***");
+            getLogger().severe("*** This plugin will be disabled. ***");
+            this.setEnabled(false);
+            return;
+        }
+        api = HolographicDisplaysAPI.get(this);
+
+        getServer().getPluginManager().registerEvents(new MinionManipulateEvent(), this);
 
         getCommand("minion").setExecutor(new MinionCommand());
 

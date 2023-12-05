@@ -3,16 +3,19 @@ package dk.spacemc.minions.classes;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import dk.spacemc.minions.Minions;
-import javafx.beans.property.Property;
-import net.milkbowl.vault.economy.Economy;
+import dk.wavebleak.sell.SellManager;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.EulerAngle;
@@ -52,7 +55,7 @@ public class Minion {
 
 
     /**
-     * Constructor for minions, den tilføjer sig selv til databasen og derefter gemmer den
+     * Constructor for minions
      * @param level Minionens level
      * @param type Minionens type
      * @param uuidOfOwner Ejerens UUID
@@ -141,21 +144,20 @@ public class Minion {
         if(getMinion() == null) return;
         switch (frame) {
             case 1:
-                // Arm er højt oppe
-                minion.setRightArmPose(new EulerAngle(215, 1, 1));
-                //gucci
+                // Arm is high up
+                minion.setRightArmPose(new EulerAngle(Math.toRadians(215), Math.toRadians(1), Math.toRadians(1)));
                 break;
             case 2:
-                // Arm er lidt oppe
-                minion.setRightArmPose(new EulerAngle(250, 1, 1));
+                // Arm is a bit up
+                minion.setRightArmPose(new EulerAngle(Math.toRadians(250), Math.toRadians(1), Math.toRadians(1)));
                 break;
             case 3:
-                // Arm er lidt nede
-                minion.setRightArmPose(new EulerAngle(285, 1, 1));
+                // Arm is a bit down
+                minion.setRightArmPose(new EulerAngle(Math.toRadians(285), Math.toRadians(1), Math.toRadians(1)));
                 break;
             case 4:
-                // Arm er langt nede
-                minion.setRightArmPose(new EulerAngle(325, 1, 1));
+                // Arm is far down
+                minion.setRightArmPose(new EulerAngle(Math.toRadians(325), Math.toRadians(1), Math.toRadians(1)));
                 break;
         }
     }
@@ -185,6 +187,7 @@ public class Minion {
         for(Entity itemEntity : items) {
             Item item = (Item) itemEntity;
             ItemStack stack = item.getItemStack();
+            if(!hasRoomForItem(stack)) continue;
             chest.getBlockInventory().addItem(stack);
             item.remove();
         }
@@ -199,7 +202,7 @@ public class Minion {
         List<Entity> entities = minion.getNearbyEntities(3, 3, 3);
         Vector dir = minion.getLocation().getDirection();
         for(Entity entity : entities){
-            if(entity.isDead()) continue;
+            if(!(entity instanceof LivingEntity)) continue;
             Vector from = minion.getLocation().toVector();
             Vector to = entity.getLocation().toVector();
             Vector fromTo = to.subtract(from);
@@ -217,19 +220,42 @@ public class Minion {
         Chest chest = getChest();
 
         ListIterator<ItemStack> iterator = chest.getBlockInventory().iterator();
+        ArrayList<ItemStack> itemsToSell = new ArrayList<>();
         while (iterator.hasNext()) {
-            ItemStack currentStack = iterator.next();
-
-            //Sell the itemStack
+            itemsToSell.add(iterator.next());
         }
 
+        double profit = SellManager.sellItems(itemsToSell, getOwner(), chest.getBlockInventory(), false);
+
+        if(profit > 0) {
+            new HologramManager("&a+ " + profit + "$", getMinion().getEyeLocation().add(0, 0.5, 0), 1D, false).spawn();
+
+        }
+
+    }
+
+    public boolean hasRoomForItem(ItemStack itemStack) {
+        Chest chest = getChest();
+
+        Inventory chestInventory = chest.getInventory();
+
+        // Calculate the available space for the item in the chest inventory
+        int availableSpace = 0;
+        for (ItemStack slot : chestInventory.getContents()) {
+            if (slot == null || slot.getType() == Material.AIR) {
+                availableSpace += itemStack.getMaxStackSize();
+            } else if (slot.isSimilar(itemStack) && slot.getAmount() < itemStack.getMaxStackSize()) {
+                availableSpace += itemStack.getMaxStackSize() - slot.getAmount();
+            }
+        }
+        return availableSpace >= itemStack.getAmount();
     }
 
 
 
     public Chest getChest() {
         Location chestLocation = new Location(getWorld(), chestX, chestY, chestZ);
-        return (Chest) getWorld().getBlockAt(chestLocation);
+        return (Chest) getWorld().getBlockAt(chestLocation).getState();
     }
 
     public boolean isSpawned() {
@@ -271,7 +297,9 @@ public class Minion {
         minion.setGravity(false);
         minion.setArms(true);
 
-        //minion.setHelmet(getSkull());
+        minion.setMetadata("invulnerable", new FixedMetadataValue(getInstance(), true));
+
+        minion.setHelmet(getSkull());
         minion.setChestplate(getChestplate());
         minion.setLeggings(getLeggings());
         minion.setBoots(getBoots());
@@ -283,6 +311,10 @@ public class Minion {
      */
     public void disable() {
         this.isDisabled = true;
+    }
+
+    public boolean isDisabled() {
+        return isDisabled;
     }
 
     public ItemStack getTool() {
@@ -306,7 +338,7 @@ public class Minion {
 
         Optional<Entity> optional = getWorld().getNearbyEntities(location, 5, 5, 5)
                 .stream()
-                .filter(entity -> entity instanceof ArmorStand)
+                .filter(entity -> entity.getType().equals(EntityType.ARMOR_STAND))
                 .min(Comparator.comparingDouble(entity -> entity.getLocation().distanceSquared(location)));
 
         return (ArmorStand) optional.orElse(null);
@@ -330,12 +362,61 @@ public class Minion {
     }
 
     public ItemStack getSkull() {
-        ItemStack skull = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
-        SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
-        skullMeta.setOwner(Bukkit.getPlayer(UUID.fromString(uuidOfOwner)).getDisplayName());
-        skull.setItemMeta(skullMeta);
-        return skull;
+        ItemStack skullItem = new ItemStack(Material.SKULL_ITEM, 1, (short) SkullType.PLAYER.ordinal());
+        SkullMeta meta = (SkullMeta) skullItem.getItemMeta();
+
+
+        GameProfile gameProfile = new GameProfile(java.util.UUID.fromString(uuidOfOwner), null);
+        gameProfile.getProperties().put("textures", new Property("textures", getTextureValue()));
+
+        try {
+            Field profileField = meta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(meta, gameProfile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        skullItem.setItemMeta(meta);
+        return skullItem;
     }
+
+    public String getTextureValue() {
+        String url = "https://sessionserver.mojang.com/session/minecraft/profile/" + uuidOfOwner;
+
+
+        try {
+            URL requestUrl = new URL(url);
+            HttpURLConnection connection = (HttpURLConnection) requestUrl.openConnection();
+            connection.setRequestMethod("GET");
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+
+                reader.close();
+                String jsonResponse = response.toString();
+
+                Gson gson = new Gson();
+                JsonObject json = gson.fromJson(jsonResponse, JsonObject.class);
+
+                JsonArray properties = json.getAsJsonArray("properties");
+                JsonObject texture = properties.get(0).getAsJsonObject();
+
+                return texture.get("value").getAsString();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
     /**
      * Får gennemsnitlig skin farve ved at scanne hver pixel i ejerens skin og dividere det med hvor mange pixels skinnet er
@@ -423,6 +504,62 @@ public class Minion {
             default:
                 return 4;
         }
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public double getX() {
+        return x;
+    }
+    public double getY() {
+        return y;
+    }
+    public double getZ() {
+        return z;
+    }
+
+    public String getUuidOfOwner() {
+        return uuidOfOwner;
+    }
+
+    public double getChestX() {
+        return chestX;
+    }
+    public double getChestY() {
+        return chestY;
+    }
+    public double getChestZ() {
+        return chestZ;
+    }
+
+    public void remove() {
+        getMinion().remove();
+        disable();
+        getInstance().minions.remove(this);
+    }
+
+    public static boolean isMinion(Entity entity) {
+        if(getInstance().minions == null) {
+            getInstance().getLogger().info("MINIONS IS NULL");
+            return false;
+        }
+        Optional<Minion> minion = getInstance().minions.stream().filter(x -> {
+            if(x.getMinion() == null) {
+                getInstance().getLogger().info("GETMINION IS NULL");
+                return false;
+            }
+            return x.getMinion().equals(entity);
+        }).findAny();
+
+        return minion.isPresent();
+    }
+
+    public static Minion getMinion(Entity entity) {
+        Optional<Minion> minion = getInstance().minions.stream().filter(x -> x.getMinion().equals(entity)).findAny();
+
+        return minion.orElse(null);
     }
 
 }

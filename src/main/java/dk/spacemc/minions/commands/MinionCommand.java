@@ -37,7 +37,7 @@ public class MinionCommand implements CommandExecutor {
         } else {
             Minion.minionType type;
             try {
-                type = Minion.minionType.valueOf(args[0]);
+                type = Minion.minionType.valueOf(args[0].toUpperCase());
             }catch (IllegalArgumentException e) {
                 sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cDer blev ikke fundet den minion type!"));
                 return false;

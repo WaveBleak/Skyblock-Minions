@@ -1,6 +1,7 @@
 package dk.spacemc.minions.utils;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
 import dk.spacemc.minions.classes.Minion;
@@ -28,32 +29,31 @@ public class Manager {
                     List<Minion> datas = new ArrayList<>();
                     datas.add(new Minion(1, 2, "390f6268-c72e-4206-a8dc-4980cd655845", 5, 5, 5, 6, 6, 6, "world"));
                     datas.add(new Minion(1, 1, "67b6c55c-948d-4967-99f2-5ff1c254b27f", 10, 10, 10, 11, 11, 11, "world"));
-                    saveJsonToFile(dbFile, datas);
+                    saveJsonToFile(datas);
                 }
             }catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        dataArray = loadJsonFromFile(dbFile);
+        dataArray = loadJsonFromFile();
     }
 
     public List<Minion> loadData() {
         Gson gson = new Gson();
-
         Type type = new TypeToken<List<Minion>>() {}.getType();
-
         return gson.fromJson(dataArray, type);
     }
 
     public void saveData(List<Minion> data) {
-        dataArray = new Gson().toJsonTree(data).getAsJsonArray();
-        saveJsonToFile(dbFile, dataArray);
+        Gson gson = new GsonBuilder().registerTypeAdapter(Minion.class, new MinionSerializer()).create();
+        dataArray = gson.toJsonTree(data).getAsJsonArray();
+        saveJsonToFile(dataArray);
     }
 
-    public JsonArray loadJsonFromFile(File file) {
+    public JsonArray loadJsonFromFile() {
         Gson gson = new Gson();
 
-        try (FileReader reader = new FileReader(file)) {
+        try (FileReader reader = new FileReader(dbFile)) {
             return gson.fromJson(reader, JsonArray.class);
         }catch (Exception e) {
             e.printStackTrace();
@@ -61,10 +61,10 @@ public class Manager {
         return new JsonArray();
     }
 
-    public <T> void saveJsonToFile(File file, T object) {
+    public <T> void saveJsonToFile(T object) {
         Gson gson = new Gson();
 
-        try (FileWriter writer = new FileWriter(file)) {
+        try (FileWriter writer = new FileWriter(dbFile)) {
             String jsonString = gson.toJson(object);
             writer.write(jsonString);
         }catch (Exception e) {

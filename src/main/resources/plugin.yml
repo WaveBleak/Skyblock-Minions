@@ -1,6 +1,6 @@
 name: Minions
 version: '${version}'
-depend: [Vault]
+depend: [Vault, HolographicDisplays]
 main: dk.spacemc.minions.Minions
 commands:
   minion:
