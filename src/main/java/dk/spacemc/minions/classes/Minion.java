@@ -10,6 +10,7 @@ import dk.wavebleak.sell.SellManager;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -225,7 +226,13 @@ public class Minion {
     public void sell() {
         Chest chest = getChest();
 
-        ListIterator<ItemStack> iterator = chest.getBlockInventory().iterator();
+        ListIterator<ItemStack> iterator;
+        if(chest instanceof DoubleChest) {
+            DoubleChest doubleChest = (DoubleChest) chest;
+            iterator = doubleChest.getInventory().iterator();
+        } else {
+            iterator = chest.getBlockInventory().iterator();
+        }
         ArrayList<ItemStack> items = new ArrayList<>();
         boolean funny = false;
         while(iterator.hasNext()) {
@@ -249,7 +256,14 @@ public class Minion {
     public boolean hasRoomForItem(ItemStack itemStack) {
         Chest chest = getChest();
 
-        Inventory chestInventory = chest.getInventory();
+        Inventory chestInventory;
+
+        if(chest instanceof DoubleChest) {
+            DoubleChest doubleChest = (DoubleChest) chest;
+            chestInventory = doubleChest.getInventory();
+        } else {
+            chestInventory = chest.getBlockInventory();
+        }
 
         // Calculate the available space for the item in the chest inventory
         int availableSpace = 0;
