@@ -3,7 +3,6 @@ package dk.spacemc.minions.classes;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.mojang.authlib.GameProfile;
 import dk.spacemc.minions.Minions;
 import javafx.beans.property.Property;
 import org.bukkit.*;
@@ -24,6 +23,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -51,7 +51,7 @@ public class Minion {
 
 
     /**
-     * Constructor for minions
+     * Constructor for minions, den tilføjer sig selv til databasen og derefter gemmer den
      * @param level Minionens level
      * @param type Minionens type
      * @param uuidOfOwner Ejerens UUID
@@ -75,6 +75,9 @@ public class Minion {
         this.chestZ = chestZ;
         this.world = world;
         this.isDisabled = false;
+
+        getInstance().minions.add(this);
+        getInstance().manager.saveData(getInstance().minions);
     }
 
     public void run() {
@@ -204,6 +207,10 @@ public class Minion {
         return false;
     }
 
+    /**
+     * Her er prisen for at opgradere sin minion fra det level den er nu, til det level der er over det
+     * @return Prisen for at opgradere
+     */
     public int calcUpgradeCost() {
         return (int) Math.round(level * 5.5);
     }
@@ -254,7 +261,10 @@ public class Minion {
     public ArmorStand getMinion() {
         Location location = new Location(getWorld(), x, y, z);
 
-        Optional<Entity> optional = getWorld().getNearbyEntities(location, 1, 1, 1).stream().filter(x -> x instanceof ArmorStand).findFirst();
+        Optional<Entity> optional = getWorld().getNearbyEntities(location, 5, 5, 5)
+                .stream()
+                .filter(entity -> entity instanceof ArmorStand)
+                .min(Comparator.comparingDouble(entity -> entity.getLocation().distanceSquared(location)));
 
         return (ArmorStand) optional.orElse(null);
     }
@@ -304,16 +314,12 @@ public class Minion {
             for(int y = 0; y < height; y++) {
                 for(int x = 0; x < width; x++) {
                     int rgb = image.getRGB(x, y);
+                    int alpha = (rgb >> 24) & 0xFF;
                     int red = (rgb >> 16) & 0xFF;
                     int green = (rgb >> 8) & 0xFF;
                     int blue = rgb & 0xFF;
 
-                    if (red == 255 && green == 255 && blue == 255) {
-                        continue;
-                    }
-                    if (red == 0 && green == 0 && blue == 0) {
-                        continue;
-                    }
+                    if(alpha == 0) continue;
 
                     totalPixels++;
                     redSum += red;
