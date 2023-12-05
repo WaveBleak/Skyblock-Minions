@@ -24,7 +24,7 @@ public class MinionCommand implements CommandExecutor {
 
             Block chest = player.getTargetBlock((Set<Material>) null, 15);
 
-            if (!(chest instanceof Chest)) {
+            if(!(chest.getType().equals(Material.CHEST))) {
                 sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cDer blev ikke fundet en kiste!"));
                 return false;
             }
@@ -47,7 +47,7 @@ public class MinionCommand implements CommandExecutor {
 
             Block chest = player.getTargetBlock((Set<Material>) null, 15);
 
-            if(!(chest instanceof Chest)) {
+            if(!(chest.getType().equals(Material.CHEST))) {
                 sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cDer blev ikke fundet en kiste!"));
                 return false;
             }

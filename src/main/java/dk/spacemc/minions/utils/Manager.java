@@ -34,6 +34,7 @@ public class Manager {
                 e.printStackTrace();
             }
         }
+        dataArray = loadJsonFromFile(dbFile);
     }
 
     public List<Minion> loadData() {

@@ -115,6 +115,7 @@ public class Minion {
 
 
     public void performAction() {
+        if(getMinion() == null) return;
         switch (getType()) {
             case ATTACK:
                 attack();
@@ -137,6 +138,7 @@ public class Minion {
      */
     public void performAnimation(int frame) {
         ArmorStand minion = getMinion();
+        if(getMinion() == null) return;
         switch (frame) {
             case 1:
                 // Arm er højt oppe
@@ -269,7 +271,7 @@ public class Minion {
         minion.setGravity(false);
         minion.setArms(true);
 
-        minion.setHelmet(getSkull());
+        //minion.setHelmet(getSkull());
         minion.setChestplate(getChestplate());
         minion.setLeggings(getLeggings());
         minion.setBoots(getBoots());
