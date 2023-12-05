@@ -21,15 +21,14 @@ public class MinionPlaceEvent implements Listener {
 
     @EventHandler
     public void onMinionPlace(PlayerInteractEvent e) {
-        getInstance().getLogger().info("1");
         if(!e.getAction().equals(Action.RIGHT_CLICK_BLOCK)) return;
         if(!e.getItem().getType().equals(Material.MONSTER_EGG)) return;
         if(!e.getClickedBlock().getType().equals(Material.CHEST)) {
-            e.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&cDu skal placere din minion på en kiste!"));
+            e.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&cDu skal placere din minion p\u00E5 en kiste!"));
             return;
         }
         if(!e.getClickedBlock().getWorld().getBlockAt(e.getClickedBlock().getLocation().add(0, 1, 0)).getType().equals(Material.AIR)) {
-            e.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&cDer er ikke plads til at sætte din minion på toppen af kisten!"));
+            e.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&cDer er ikke plads til at s\u00E6tte din minion p\u00E5 toppen af kisten!"));
             return;
         }
 
@@ -55,7 +54,6 @@ public class MinionPlaceEvent implements Listener {
             item.setAmount(1);
             player.getInventory().remove(item);
         }
-        getInstance().getLogger().info("5");
     }
 
 }

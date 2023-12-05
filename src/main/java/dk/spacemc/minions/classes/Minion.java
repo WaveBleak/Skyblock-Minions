@@ -181,6 +181,9 @@ public class Minion {
      */
     public void pickup() {
         Chest chest = getChest();
+
+        if(chest == null) return;
+
         ArmorStand minion = getMinion();
 
         Location location = minion.getLocation();
@@ -226,6 +229,8 @@ public class Minion {
     public void sell() {
         Chest chest = getChest();
 
+        if(chest == null) return;
+
         ListIterator<ItemStack> iterator;
         if(chest instanceof DoubleChest) {
             DoubleChest doubleChest = (DoubleChest) chest;
@@ -256,6 +261,8 @@ public class Minion {
     public boolean hasRoomForItem(ItemStack itemStack) {
         Chest chest = getChest();
 
+        if(chest == null) return false;
+
         Inventory chestInventory;
 
         if(chest instanceof DoubleChest) {
@@ -280,7 +287,8 @@ public class Minion {
 
 
     public Chest getChest() {
-        Location chestLocation = new Location(getWorld(), chestX, chestY, chestZ);
+        Location chestLocation = getChestLocation();
+        if(!chestLocation.getWorld().getBlockAt(chestLocation).getType().equals(Material.CHEST)) return null;
         return (Chest) getWorld().getBlockAt(chestLocation).getState();
     }
 
@@ -574,12 +582,10 @@ public class Minion {
 
     public static boolean isMinion(Entity entity) {
         if(getInstance().minions == null) {
-            getInstance().getLogger().info("MINIONS IS NULL");
             return false;
         }
         Optional<Minion> minion = getInstance().minions.stream().filter(x -> {
             if(x.getMinion() == null) {
-                getInstance().getLogger().info("GETMINION IS NULL");
                 return false;
             }
             return x.getMinion().equals(entity);
@@ -590,12 +596,10 @@ public class Minion {
 
     public static Minion getMinion(Entity entity) {
         if(getInstance().minions == null) {
-            getInstance().getLogger().info("MINIONS IS NULL");
             return null;
         }
         Optional<Minion> minion = getInstance().minions.stream().filter(x -> {
             if(x.getMinion() == null) {
-                getInstance().getLogger().info("GETMINION IS NULL");
                 return false;
             }
             return x.getMinion().equals(entity);
