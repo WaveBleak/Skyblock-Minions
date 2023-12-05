@@ -77,8 +77,8 @@ public class Minion {
         this.world = world;
         this.isDisabled = false;
 
-        getInstance().minions.add(this);
-        getInstance().manager.saveData(getInstance().minions);
+        //getInstance().minions.add(this);
+        //getInstance().manager.saveData(getInstance().minions);
     }
 
     public void run() {

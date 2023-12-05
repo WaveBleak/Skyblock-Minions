@@ -1,5 +1,6 @@
 package dk.spacemc.minions.commands;
 
+import dk.spacemc.minions.Minions;
 import dk.spacemc.minions.classes.Minion;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -31,6 +32,7 @@ public class MinionCommand implements CommandExecutor {
             Minion minion = new Minion(1, number, player.getUniqueId().toString(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), chest.getX(), chest.getY(), chest.getZ(), player.getWorld().getName());
             minion.spawn();
             minion.run();
+            saveMinion(minion);
             return true;
         } else {
             Minion.minionType type;
@@ -53,7 +55,13 @@ public class MinionCommand implements CommandExecutor {
             Minion minion = new Minion(1, number, player.getUniqueId().toString(), player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), chest.getX(), chest.getY(), chest.getZ(), player.getWorld().getName());
             minion.spawn();
             minion.run();
+            saveMinion(minion);
             return true;
         }
+    }
+
+    public void saveMinion(Minion minion) {
+        Minions.getInstance().minions.add(minion);
+        Minions.getInstance().manager.saveData(Minions.getInstance().minions);
     }
 }
