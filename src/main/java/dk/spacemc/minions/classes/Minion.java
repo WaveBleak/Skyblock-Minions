@@ -184,10 +184,12 @@ public class Minion {
 
         List<Entity> items = getWorld().getNearbyEntities(location, 3, 1, 3).stream().filter(x -> x instanceof Item).collect(Collectors.toList());
 
-        for(Entity itemEntity : items) {
-            Item item = (Item) itemEntity;
+        Optional<Entity> optional = items.stream().findFirst();
+
+        if(optional.isPresent()) {
+            Item item = (Item) optional.get();
             ItemStack stack = item.getItemStack();
-            if(!hasRoomForItem(stack)) continue;
+            if(!hasRoomForItem(stack)) return;
             chest.getBlockInventory().addItem(stack);
             item.remove();
         }
@@ -201,13 +203,16 @@ public class Minion {
         ArmorStand minion = getMinion();
         List<Entity> entities = minion.getNearbyEntities(3, 3, 3);
         Vector dir = minion.getLocation().getDirection();
+        boolean hasAttackedOnce = false;
         for(Entity entity : entities){
+            if(hasAttackedOnce) continue;
             if(!(entity instanceof LivingEntity)) continue;
             Vector from = minion.getLocation().toVector();
             Vector to = entity.getLocation().toVector();
             Vector fromTo = to.subtract(from);
 
             if(dir.dot(fromTo) > 0.8) {
+                hasAttackedOnce = true;
                 ((LivingEntity) entity).damage(5D); //wher do we do the spawning dodilligence?
             }
         }
@@ -220,12 +225,18 @@ public class Minion {
         Chest chest = getChest();
 
         ListIterator<ItemStack> iterator = chest.getBlockInventory().iterator();
-        ArrayList<ItemStack> itemsToSell = new ArrayList<>();
-        while (iterator.hasNext()) {
-            itemsToSell.add(iterator.next());
+        ArrayList<ItemStack> items = new ArrayList<>();
+        boolean funny = false;
+        while(iterator.hasNext()) {
+            ItemStack item = iterator.next();
+            if(funny) continue;
+            if(!item.getType().equals(Material.AIR)) {
+                funny = true;
+                items.add(item);
+            }
         }
 
-        double profit = SellManager.sellItems(itemsToSell, getOwner(), chest.getBlockInventory(), false);
+        double profit = SellManager.sellItems(items, getOwner(), chest.getBlockInventory(), false);
 
         if(profit > 0) {
             new HologramManager("&a+ " + profit + "$", getMinion().getEyeLocation().add(0, 0.5, 0), 1D, false).spawn();
