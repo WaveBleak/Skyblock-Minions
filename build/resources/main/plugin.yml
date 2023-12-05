@@ -1,5 +1,5 @@
 name: Minions
-version: '${version}'
+version: '1.0'
 depend: [Vault]
 main: dk.spacemc.minions.Minions
 commands:

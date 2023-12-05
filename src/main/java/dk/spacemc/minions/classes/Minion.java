@@ -5,16 +5,18 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dk.spacemc.minions.Minions;
 import javafx.beans.property.Property;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.EulerAngle;
+import org.bukkit.util.Vector;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -23,15 +25,14 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Comparator;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 import static dk.spacemc.minions.Minions.getInstance;
 
 public class Minion {
-    public enum minionType {
+    public static enum minionType {
         DIG,
         ATTACK,
         SELL,
@@ -139,15 +140,20 @@ public class Minion {
         switch (frame) {
             case 1:
                 // Arm er højt oppe
+                minion.setRightArmPose(new EulerAngle(215, 1, 1));
+                //gucci
                 break;
             case 2:
                 // Arm er lidt oppe
+                minion.setRightArmPose(new EulerAngle(250, 1, 1));
                 break;
             case 3:
                 // Arm er lidt nede
+                minion.setRightArmPose(new EulerAngle(285, 1, 1));
                 break;
             case 4:
                 // Arm er langt nede
+                minion.setRightArmPose(new EulerAngle(325, 1, 1));
                 break;
         }
     }
@@ -157,6 +163,10 @@ public class Minion {
      */
     public void dig() {
         ArmorStand minion = getMinion();
+
+        Block targetBlock = minion.getTargetBlock((Set<Material>) null, 3);
+
+        targetBlock.breakNaturally();
     }
 
     /**
@@ -165,13 +175,37 @@ public class Minion {
     public void pickup() {
         Chest chest = getChest();
         ArmorStand minion = getMinion();
+
+        Location location = minion.getLocation();
+
+        List<Entity> items = getWorld().getNearbyEntities(location, 3, 1, 3).stream().filter(x -> x instanceof Item).collect(Collectors.toList());
+
+        for(Entity itemEntity : items) {
+            Item item = (Item) itemEntity;
+            ItemStack stack = item.getItemStack();
+            chest.getBlockInventory().addItem(stack);
+            item.remove();
+        }
     }
 
     /**
      * Denne funktion bliver kaldt hvis det er en ATTACK minion, hver calcCooldown ticks
+
      */
     public void attack() {
         ArmorStand minion = getMinion();
+        List<Entity> entities = minion.getNearbyEntities(3, 3, 3);
+        Vector dir = minion.getLocation().getDirection();
+        for(Entity entity : entities){
+            if(entity.isDead()) continue;
+            Vector from = minion.getLocation().toVector();
+            Vector to = entity.getLocation().toVector();
+            Vector fromTo = to.subtract(from);
+
+            if(dir.dot(fromTo) > 0.8) {
+                ((LivingEntity) entity).damage(5D); //wher do we do the spawning dodilligence?
+            }
+        }
     }
 
     /**
@@ -179,6 +213,13 @@ public class Minion {
      */
     public void sell() {
         Chest chest = getChest();
+
+        ListIterator<ItemStack> iterator = chest.getBlockInventory().iterator();
+        while (iterator.hasNext()) {
+            ItemStack currentStack = iterator.next();
+
+            //Sell the itemStack
+        }
 
     }
 
@@ -366,6 +407,19 @@ public class Minion {
                 return minionType.ATTACK;
             default:
                 return minionType.SELL;
+        }
+    }
+
+    public static int getType(minionType type) {
+        switch(type) {
+            case DIG:
+                return 1;
+            case PICKUP:
+                return 2;
+            case ATTACK:
+                return 3;
+            default:
+                return 4;
         }
     }
 

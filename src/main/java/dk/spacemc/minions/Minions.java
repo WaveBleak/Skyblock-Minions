@@ -1,6 +1,7 @@
 package dk.spacemc.minions;
 
 import dk.spacemc.minions.classes.Minion;
+import dk.spacemc.minions.commands.MinionCommand;
 import dk.spacemc.minions.utils.Manager;
 import dk.spacemc.minions.utils.Util;
 import net.milkbowl.vault.economy.Economy;
@@ -26,6 +27,8 @@ public final class Minions extends JavaPlugin {
         } else {
             System.out.println("Economy couldn't load!");
         }
+
+        getCommand("minion").setExecutor(new MinionCommand());
 
 
         for(Minion minion : minions) {
