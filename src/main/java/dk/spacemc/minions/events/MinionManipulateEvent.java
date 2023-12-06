@@ -1,8 +1,11 @@
 package dk.spacemc.minions.events;
 
+import dk.spacemc.minions.Minions;
 import dk.spacemc.minions.classes.Minion;
 import dk.spacemc.minions.classes.MinionEgg;
+import dk.spacemc.minions.utils.Util;
 import dk.wavebleak.sell.SellManager;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Chest;
@@ -13,11 +16,16 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.concurrent.CompletableFuture;
+
+import static dk.wavebleak.sell.Sell.economy;
 
 public class MinionManipulateEvent implements Listener {
 
@@ -25,6 +33,43 @@ public class MinionManipulateEvent implements Listener {
     public void changeArmorStandEvent(PlayerArmorStandManipulateEvent e) {
         if(Minion.isMinion(e.getRightClicked())) {
             e.setCancelled(true);
+            Minion minion = Minion.getMinion(e.getRightClicked());
+            Minion.minionType type = minion.getType();
+            String name;
+            switch (type) {
+                case SELL:
+                    name = "Sell";
+                    break;
+                case ATTACK:
+                    name = "Attack";
+                    break;
+                case DIG:
+                    name = "Dig";
+                    break;
+                default:
+                    name = "Pickup";
+                    break;
+            }
+            Inventory inventory = Bukkit.createInventory(null, InventoryType.DROPPER, ChatColor.translateAlternateColorCodes('&', "&b" + e.getPlayer().getName() + "'s " + name + " minion"));
+            ItemStack skull = Util.setNameAndLore(minion.getSkull(), "&b" + e.getPlayer().getName() + "'s " + name + " minion", "&fBlah blah", "&gBlah");
+            ItemStack upgrade = Util.setNameAndLore(new ItemStack(Material.DIAMOND), "&bUpgrade", "&fKlik her for at opgradere din minion!", "&f" + minion.calcUpgradeCost() + "$");
+            inventory.setItem(1, skull);
+            inventory.setItem(7, upgrade);
+
+            e.getPlayer().openInventory(inventory);
+            CompletableFuture<ItemStack> completableFuture = new CompletableFuture<>();
+            Minions.getInstance().inventoryManager.put(e.getPlayer(), completableFuture);
+
+            completableFuture.whenComplete((x, y) -> {
+                if(x.equals(upgrade)) {
+                    if(minion.upgrade()) {
+                        e.getPlayer().closeInventory();
+                        return;
+                    }
+                    e.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&cDu har ikke råd til dette, mangler: " + Math.abs(economy.getBalance(e.getPlayer()) - minion.calcUpgradeCost()) + "$"));
+
+                }
+            });
         }
     }
 

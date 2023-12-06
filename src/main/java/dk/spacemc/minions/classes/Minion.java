@@ -305,9 +305,33 @@ public class Minion {
             level++;
             run();
             getInstance().economy.withdrawPlayer(getOwner(), calcUpgradeCost());
+            new InstantFirework(FireworkEffect.builder()
+                    .trail(true)
+                    .withColor(Color.RED, Color.YELLOW, Color.ORANGE)
+                    .build(),
+                    getMinion().getLocation()
+            );
             return true;
         }
         return false;
+    }
+    /**
+     * Opgradere minionen lige gyldigt hvad
+     */
+    public void forceUpgrade(boolean silent) {
+        level++;
+        run();
+        if(!silent) {
+            new InstantFirework(FireworkEffect.builder()
+                    .trail(true)
+                    .withColor(Color.RED, Color.YELLOW, Color.ORANGE)
+                    .build(),
+                    getMinion().getLocation()
+            );
+        }
+    }
+    public void forceUpgrade() {
+        forceUpgrade(false);
     }
 
     /**
