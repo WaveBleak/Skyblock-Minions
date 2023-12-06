@@ -301,7 +301,7 @@ public class Minion {
      * @return true hvis den successfully opgradere(aka: man har råd)
      */
     public boolean upgrade() {
-        if(getInstance().economy.bankHas(getOwner().getName(), calcUpgradeCost()).transactionSuccess()) {
+        if(getInstance().economy.getBalance(Bukkit.getOfflinePlayer(UUID.fromString(uuidOfOwner))) >= calcUpgradeCost()) {
             level++;
             run();
             getInstance().economy.withdrawPlayer(getOwner(), calcUpgradeCost());

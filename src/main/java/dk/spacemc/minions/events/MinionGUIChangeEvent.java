@@ -30,7 +30,13 @@ public class MinionGUIChangeEvent implements Listener {
             event.setCancelled(true);
             Minion minion = Minions.getInstance().inventoryManager.get(player);
             if(event.getSlot() == 7) {
-                minion.upgrade();
+                if(minion.upgrade()) {
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aDu opgraderede din minion til level " + minion.getLevel() + "!"));
+                    player.closeInventory();
+                } else {
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cDu har ikke råd til dette!"));
+                    player.closeInventory();
+                }
             }
         }
     }
