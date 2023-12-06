@@ -1,7 +1,11 @@
 package dk.spacemc.minions.events;
 
 import dk.spacemc.minions.Minions;
+import dk.spacemc.minions.classes.Minion;
+import dk.spacemc.minions.utils.Util;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,12 +26,11 @@ public class MinionGUIChangeEvent implements Listener {
     public void MinionGUIPickEvent(InventoryClickEvent event) {
         Player player = Bukkit.getPlayer(event.getWhoClicked().getUniqueId());
 
-        if (Minions.getInstance().inventoryManager.containsKey(player)) {
+        if(ChatColor.stripColor(event.getInventory().getName()).startsWith(">") && Minions.getInstance().inventoryManager.containsKey(player)) {
             event.setCancelled(true);
-            ItemStack cursorItem = event.getCursor();
-
-            if (cursorItem != null && event.getRawSlot() >= 0 && event.getRawSlot() < player.getInventory().getSize()) {
-                Minions.getInstance().inventoryManager.get(player).complete(cursorItem);
+            Minion minion = Minions.getInstance().inventoryManager.get(player);
+            if(event.getSlot() == 7) {
+                minion.upgrade();
             }
         }
     }

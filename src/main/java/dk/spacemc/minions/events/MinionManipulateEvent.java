@@ -50,26 +50,15 @@ public class MinionManipulateEvent implements Listener {
                     name = "Pickup";
                     break;
             }
-            Inventory inventory = Bukkit.createInventory(null, InventoryType.DROPPER, ChatColor.translateAlternateColorCodes('&', "&b" + e.getPlayer().getName() + "'s " + name + " minion"));
-            ItemStack skull = Util.setNameAndLore(minion.getSkull(), "&b" + e.getPlayer().getName() + "'s " + name + " minion", "&fBlah blah", "&gBlah");
+            Inventory inventory = Bukkit.createInventory(null, InventoryType.CHEST, ChatColor.translateAlternateColorCodes('&', "&7> &b" + e.getPlayer().getName() + "'s " + name + " minion"));
+            ItemStack skull = Util.setNameAndLore(minion.getSkull(), " &b" + e.getPlayer().getName() + "'s " + name + " minion", "&fBlah blah", "&gBlah");
             ItemStack upgrade = Util.setNameAndLore(new ItemStack(Material.DIAMOND), "&bUpgrade", "&fKlik her for at opgradere din minion!", "&f" + minion.calcUpgradeCost() + "$");
             inventory.setItem(1, skull);
             inventory.setItem(7, upgrade);
 
             e.getPlayer().openInventory(inventory);
-            CompletableFuture<ItemStack> completableFuture = new CompletableFuture<>();
-            Minions.getInstance().inventoryManager.put(e.getPlayer(), completableFuture);
 
-            completableFuture.whenComplete((x, y) -> {
-                if(x.equals(upgrade)) {
-                    if(minion.upgrade()) {
-                        e.getPlayer().closeInventory();
-                        return;
-                    }
-                    e.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&cDu har ikke råd til dette, mangler: " + Math.abs(economy.getBalance(e.getPlayer()) - minion.calcUpgradeCost()) + "$"));
-
-                }
-            });
+            Minions.getInstance().inventoryManager.put(e.getPlayer(), minion);
         }
     }
 

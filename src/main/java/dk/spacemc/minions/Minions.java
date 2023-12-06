@@ -11,13 +11,10 @@ import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.logging.Logger;
 
 public final class Minions extends JavaPlugin {
 
@@ -26,7 +23,7 @@ public final class Minions extends JavaPlugin {
     public static HolographicDisplaysAPI api;
     public Manager manager;
     public List<Minion> minions;
-    public HashMap<Player, CompletableFuture<ItemStack>> inventoryManager;
+    public HashMap<Player, Minion> inventoryManager;
     @Override
     public void onEnable() {
         if(!getDataFolder().exists()) getDataFolder().mkdir(); //Lav plugin mappe hvis den ikke eksistere
