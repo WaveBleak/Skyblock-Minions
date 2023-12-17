@@ -1,5 +1,6 @@
 package dk.spacemc.minions;
 
+import dk.spacemc.minions.classes.InventoryData;
 import dk.spacemc.minions.classes.Minion;
 import dk.spacemc.minions.commands.MinionCommand;
 import dk.spacemc.minions.events.MinionGUIChangeEvent;
@@ -23,7 +24,7 @@ public final class Minions extends JavaPlugin {
     public static HolographicDisplaysAPI api;
     public Manager manager;
     public List<Minion> minions;
-    public HashMap<Player, Minion> inventoryManager;
+    public HashMap<Player, InventoryData> inventoryManager;
     @Override
     public void onEnable() {
         if(!getDataFolder().exists()) getDataFolder().mkdir(); //Lav plugin mappe hvis den ikke eksistere

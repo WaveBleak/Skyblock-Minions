@@ -36,6 +36,18 @@ import java.util.stream.Collectors;
 import static dk.spacemc.minions.Minions.getInstance;
 
 public class Minion {
+    public int getItemsSold() {
+        return itemsSold;
+    }
+
+    public int getItemsPickedUp() {
+        return itemsPickedUp;
+    }
+
+    public int getSecondsAlive() {
+        return secondsAlive;
+    }
+
     public static enum minionType {
         DIG,
         ATTACK,
@@ -54,6 +66,11 @@ public class Minion {
     private final double yaw;
     private final String world;
     private boolean isDisabled;
+    private int blocksBroken;
+    private int entitiesKilled;
+    private int itemsSold;
+    private int itemsPickedUp;
+    private int secondsAlive;
 
 
     /**
@@ -82,6 +99,11 @@ public class Minion {
         this.yaw = yaw;
         this.world = world;
         this.isDisabled = false;
+        this.itemsSold = 0;
+        this.itemsPickedUp = 0;
+        this.entitiesKilled = 0;
+        this.blocksBroken = 0;
+        this.secondsAlive = 0;
 
         //getInstance().minions.add(this);
         //getInstance().manager.saveData(getInstance().minions);
@@ -94,6 +116,16 @@ public class Minion {
         if(animationManager != null) {
             animationManager.cancel();
         }
+        if(secondsAliveCounter != null) {
+            secondsAliveCounter.cancel();
+        }
+
+        secondsAliveCounter = new BukkitRunnable() {
+            @Override
+            public void run() {
+                secondsAlive++;
+            }
+        }.runTaskTimer(Minions.getInstance(), 20, 20);
 
         taskManager = new BukkitRunnable() {
             @Override
@@ -118,6 +150,7 @@ public class Minion {
 
     private BukkitTask taskManager = null;
     private BukkitTask animationManager = null;
+    private BukkitTask secondsAliveCounter = null;
 
 
     public void performAction() {
@@ -171,9 +204,27 @@ public class Minion {
     public void dig() {
         ArmorStand minion = getMinion();
 
-        Block targetBlock = minion.getTargetBlock((Set<Material>) null, 3);
+        Set<Material> set = new HashSet<>();
 
-        targetBlock.breakNaturally();
+        set.add(Material.AIR);
+        set.add(Material.WATER);
+        set.add(Material.LAVA);
+        set.add(Material.STATIONARY_LAVA);
+        set.add(Material.STATIONARY_WATER);
+        set.add(Material.BARRIER);
+        set.add(Material.BEDROCK);
+        set.add(Material.COMMAND);
+
+        Block targetBlock = minion.getTargetBlock(set, 3);
+
+        if(targetBlock == null) {
+            return;
+        }
+
+        if(targetBlock.breakNaturally()) {
+            this.blocksBroken++;
+        }
+
     }
 
     /**
@@ -198,6 +249,7 @@ public class Minion {
             if(!hasRoomForItem(stack)) return;
             chest.getBlockInventory().addItem(stack);
             item.remove();
+            this.itemsPickedUp++;
         }
     }
 
@@ -218,7 +270,11 @@ public class Minion {
 
             if(dir.dot(fromTo) > 0.8) {
                 hasAttackedOnce = true;
-                ((LivingEntity) entity).damage(5D); //wher do we do the spawning dodilligence?
+                double health = ((LivingEntity) entity).getHealth();
+                if(health - 50 <= 0) {
+                    this.entitiesKilled++;
+                }
+                ((LivingEntity) entity).damage(5D);
             }
         }
     }
@@ -243,6 +299,7 @@ public class Minion {
         while(iterator.hasNext()) {
             ItemStack item = iterator.next();
             if(funny) continue;
+            if(item == null) continue;
             if(!item.getType().equals(Material.AIR)) {
                 funny = true;
                 items.add(item);
@@ -250,6 +307,12 @@ public class Minion {
         }
 
         double profit = SellManager.sellItems(items, getOwner(), chest.getBlockInventory(), false);
+        int itemsSold = 0;
+        for(ItemStack item : items) {
+            itemsSold += item.getAmount();
+        }
+
+        this.itemsSold += itemsSold;
 
         if(profit > 0) {
             new HologramManager("&a+ " + profit + "$", getMinion().getEyeLocation().add(0, 0.5, 0), 1D, false).spawn();
@@ -630,6 +693,27 @@ public class Minion {
         }).findAny();
 
         return minion.orElse(null);
+    }
+
+
+    public int getBlocksBroken() {
+        return this.blocksBroken;
+    }
+    public void addBlocksBroken(int margin) {
+        this.blocksBroken += margin;
+    }
+
+    public int getEntitiesKilled() {
+        return this.entitiesKilled;
+    }
+    public void addEntitiesKilled(int margin) {
+        this.entitiesKilled += margin;
+    }
+    public void addItemsSold(int margin) {
+        this.itemsSold += margin;
+    }
+    public void addItemsPickupUp(int margin) {
+        this.itemsPickedUp += margin;
     }
 
 }

@@ -26,19 +26,13 @@ public class MinionGUIChangeEvent implements Listener {
     public void MinionGUIPickEvent(InventoryClickEvent event) {
         Player player = Bukkit.getPlayer(event.getWhoClicked().getUniqueId());
 
-        if(ChatColor.stripColor(event.getInventory().getName()).startsWith(">") && Minions.getInstance().inventoryManager.containsKey(player)) {
-            event.setCancelled(true);
-            Minion minion = Minions.getInstance().inventoryManager.get(player);
-            if(event.getSlot() == 7) {
-                if(minion.upgrade()) {
-                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aDu opgraderede din minion til level " + minion.getLevel() + "!"));
-                    player.closeInventory();
-                } else {
-                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cDu har ikke råd til dette!"));
-                    player.closeInventory();
-                }
-            }
+        if(!Minions.getInstance().inventoryManager.containsKey(player)) {
+            return;
         }
+        if(!Minions.getInstance().inventoryManager.get(player).getInventory().equals(event.getInventory())) {
+            return;
+        }
+        Minions.getInstance().inventoryManager.get(player).getLambda().run(event.getSlot());
     }
 
 }
