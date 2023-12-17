@@ -42,22 +42,26 @@ public class MinionManipulateEvent implements Listener {
             String name;
             String lore1;
             switch (type) {
-                case SELL -> {
+                case SELL:
                     name = "Sell";
                     lore1 = "&fGenstande solgt: " + minion.getItemsSold();
-                }
-                case ATTACK -> {
+                    break;
+
+                case ATTACK:
                     name = "Attack";
                     lore1 = "&fV\u00E6sner drabt: " + minion.getEntitiesKilled();
-                }
-                case DIG -> {
+                    break;
+
+                case DIG:
                     name = "Dig";
                     lore1 = "&fBlocks minet: " + minion.getBlocksBroken();
-                }
-                default -> {
+                    break;
+
+                default:
                     name = "Pickup";
                     lore1 = "&fGenstande opsamlet: " + minion.getItemsPickedUp();
-                }
+                    break;
+
             }
             String lore2 = "&f" + Util.formatTime(minion.getSecondsAlive());
             Inventory inventory = Bukkit.createInventory(null, InventoryType.CHEST, ChatColor.translateAlternateColorCodes('&', "&7> &b" + minion.getOwner().getName() + "'s " + name + " minion"));
