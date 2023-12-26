@@ -47,8 +47,24 @@ public class Manager {
                 .registerTypeAdapter(Minion.class, (JsonSerializer<Minion>) (minion, typeOfSrc, context) -> {
                     JsonObject jsonObject = new JsonObject();
 
+                    int type;
+                    switch(minion.getType()) {
+                        case DIG:
+                            type = 1;
+                            break;
+                        case PICKUP:
+                            type = 2;
+                            break;
+                        case ATTACK:
+                            type = 3;
+                            break;
+                        default:
+                            type = 4;
+                            break;
+                    }
+
                     jsonObject.addProperty("level", minion.getLevel());
-                    jsonObject.addProperty("type", Minion.getType(minion.getType()));
+                    jsonObject.addProperty("type", type);
                     jsonObject.addProperty("uuidOfOwner", minion.getUuidOfOwner());
                     jsonObject.addProperty("x", minion.getX());
                     jsonObject.addProperty("y", minion.getY());
@@ -83,7 +99,7 @@ public class Manager {
     }
 
     public <T> void saveJsonToFile(T object) {
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         try (FileWriter writer = new FileWriter(dbFile)) {
             String jsonString = gson.toJson(object);
