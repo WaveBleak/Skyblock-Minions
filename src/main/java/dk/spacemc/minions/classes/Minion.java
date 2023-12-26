@@ -1,24 +1,33 @@
 package dk.spacemc.minions.classes;
 
+import com.bgsoftware.wildstacker.api.WildStackerAPI;
+import com.bgsoftware.wildstacker.api.objects.StackedItem;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.annotations.Expose;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import dk.spacemc.minions.Minions;
 import dk.wavebleak.sell.SellManager;
+import me.filoghost.holographicdisplays.api.hologram.Hologram;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.BlockIterator;
 import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
@@ -33,6 +42,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
+import static dk.spacemc.minions.Minions.api;
 import static dk.spacemc.minions.Minions.getInstance;
 
 public class Minion {
@@ -48,7 +58,11 @@ public class Minion {
         return secondsAlive;
     }
 
-    public static enum minionType {
+    public double getYaw() {
+        return yaw;
+    }
+
+    public enum minionType {
         DIG,
         ATTACK,
         SELL,
@@ -60,18 +74,32 @@ public class Minion {
     private final double x;
     private final double y;
     private final double z;
-    private final double chestX;
-    private final double chestY;
-    private final double chestZ;
+    private double chestX;
+    private double chestY;
+    private double chestZ;
     private final double yaw;
     private final String world;
-    private boolean isDisabled;
     private int blocksBroken;
     private int entitiesKilled;
     private int itemsSold;
     private int itemsPickedUp;
     private int secondsAlive;
+    private boolean isRunning;
+    private Hologram hologram;
 
+
+    /**
+     * Constructor for minions
+     * @param level Minionens level
+     * @param type Minionens type
+     * @param owner Ejeren
+     * @param spawnLoc Lokation af spawn
+     * @param chestLoc Lokation af chest
+     * @param yaw Direktion af hvor minionen skal kikke
+     */
+    public Minion(int level, minionType type, Player owner, Location spawnLoc, Location chestLoc, double yaw) {
+        this(level, getType(type), owner.getUniqueId().toString(), spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ(), chestLoc.getBlockX(), chestLoc.getBlockY(), chestLoc.getBlockZ(), yaw, spawnLoc.getWorld().getName());
+    }
 
     /**
      * Constructor for minions
@@ -84,7 +112,7 @@ public class Minion {
      * @param chestX x-koordinatet af minionen's associeret kiste
      * @param chestY y-koordinatet af minionen's associeret kiste
      * @param chestZ z-koordinatet af minionen's associeret kiste
-     * @param world navnet på verdenen minionen er i
+     * @param world navnet p\u00E5 verdenen minionen er i
      */
     public Minion(int level, int type, String uuidOfOwner, double x, double y, double z, double chestX, double chestY, double chestZ, double yaw, String world) {
         this.level = level;
@@ -98,20 +126,25 @@ public class Minion {
         this.chestZ = chestZ;
         this.yaw = yaw;
         this.world = world;
-        this.isDisabled = false;
         this.itemsSold = 0;
         this.itemsPickedUp = 0;
         this.entitiesKilled = 0;
         this.blocksBroken = 0;
         this.secondsAlive = 0;
+        this.isRunning = false;
+        this.hologram = null;
 
         //getInstance().minions.add(this);
         //getInstance().manager.saveData(getInstance().minions);
     }
 
     public void run() {
+        run(getInstance());
+    }
+
+    public void run(JavaPlugin plugin) {
         if(taskManager != null) {
-            taskManager.cancel(); // Undgå flere tasks at køre på samme tid
+            taskManager.cancel(); // Undg\u00E5 flere tasks at k\u00F8re p\u00E5 samme tid
         }
         if(animationManager != null) {
             animationManager.cancel();
@@ -125,15 +158,15 @@ public class Minion {
             public void run() {
                 secondsAlive++;
             }
-        }.runTaskTimer(Minions.getInstance(), 20, 20);
+        }.runTaskTimer(plugin, 20, 20);
 
         taskManager = new BukkitRunnable() {
             @Override
             public void run() {
-                if(isDisabled) this.cancel();
+                isRunning = true;
                 performAction();
             }
-        }.runTaskTimer(Minions.getInstance(), getCooldown(), getCooldown());
+        }.runTaskTimer(plugin, getCooldown(), getCooldown());
 
 
         animationManager = new BukkitRunnable() {
@@ -145,7 +178,7 @@ public class Minion {
                 frames++;
 
             }
-        }.runTaskTimer(getInstance(), getCooldown() / 4, getCooldown() / 4);
+        }.runTaskTimer(plugin, getCooldown() / 4, getCooldown() / 4);
     }
 
     private BukkitTask taskManager = null;
@@ -172,7 +205,7 @@ public class Minion {
     }
 
     /**
-     * Sæt armen på minionen i en særlig position
+     * S\u00E6t armen p\u00E5 minionen i en s\u00E6rlig position
      * @param frame Den frame, der er igang
      */
     public void performAnimation(int frame) {
@@ -235,6 +268,13 @@ public class Minion {
 
         if(chest == null) return;
 
+        Inventory inventory = chest.getBlockInventory();
+        if(chest.getInventory().getHolder() instanceof DoubleChest) {
+            DoubleChest doubleChest = (DoubleChest) chest.getInventory().getHolder();
+
+            inventory = doubleChest.getInventory();
+        }
+
         ArmorStand minion = getMinion();
 
         Location location = minion.getLocation();
@@ -245,9 +285,18 @@ public class Minion {
 
         if(optional.isPresent()) {
             Item item = (Item) optional.get();
-            ItemStack stack = item.getItemStack();
-            if(!hasRoomForItem(stack)) return;
-            chest.getBlockInventory().addItem(stack);
+            StackedItem stackedItem = WildStackerAPI.getStackedItem(item);
+
+            if(!hasRoomForItem(stackedItem.getItemStack())) {
+                ItemStack tester = stackedItem.getItemStack();
+                tester.setAmount(64);
+                if(hasRoomForItem(tester)) {
+                    stackedItem.setStackAmount(stackedItem.getStackAmount() - 64, true);
+                    inventory.addItem(tester);
+                }
+                return;
+            }
+            stackedItem.giveItemStack(inventory);
             item.remove();
             this.itemsPickedUp++;
         }
@@ -287,26 +336,27 @@ public class Minion {
 
         if(chest == null) return;
 
-        ListIterator<ItemStack> iterator;
-        if(chest instanceof DoubleChest) {
-            DoubleChest doubleChest = (DoubleChest) chest;
-            iterator = doubleChest.getInventory().iterator();
-        } else {
-            iterator = chest.getBlockInventory().iterator();
-        }
+
         ArrayList<ItemStack> items = new ArrayList<>();
-        boolean funny = false;
-        while(iterator.hasNext()) {
-            ItemStack item = iterator.next();
-            if(funny) continue;
+
+
+        Inventory inventoryToSell = chest.getBlockInventory();
+        if(chest.getInventory().getHolder() instanceof DoubleChest) {
+            DoubleChest doubleChest = (DoubleChest) chest.getInventory().getHolder();
+
+            inventoryToSell = doubleChest.getInventory();
+        }
+
+        for(ItemStack item : inventoryToSell.getContents()) {
             if(item == null) continue;
-            if(!item.getType().equals(Material.AIR)) {
-                funny = true;
+            if(!item.getType().equals(Material.AIR) && SellManager.canBeSold(item)) {
                 items.add(item);
+                break;
             }
         }
 
-        double profit = SellManager.sellItems(items, getOwner(), chest.getBlockInventory(), false);
+
+        double profit = SellManager.sellItems(items, getOwner(), inventoryToSell, false);
         int itemsSold = 0;
         for(ItemStack item : items) {
             itemsSold += item.getAmount();
@@ -315,10 +365,14 @@ public class Minion {
         this.itemsSold += itemsSold;
 
         if(profit > 0) {
-            new HologramManager("&a+ " + profit + "$", getMinion().getEyeLocation().add(0, 0.5, 0), 1D, false).spawn();
+            new HologramManager("&a+ " + profit + "$", getMinion().getEyeLocation().add(0, 1.75, 0), 1D, false).spawn();
 
         }
 
+    }
+
+    public boolean hasAnyItemAtAll(Inventory inv) {
+        return inv.getContents().length != 0;
     }
 
     public boolean hasRoomForItem(ItemStack itemStack) {
@@ -326,13 +380,12 @@ public class Minion {
 
         if(chest == null) return false;
 
-        Inventory chestInventory;
+        Inventory chestInventory = chest.getBlockInventory();
 
-        if(chest instanceof DoubleChest) {
-            DoubleChest doubleChest = (DoubleChest) chest;
+        if(chest.getInventory().getHolder() instanceof DoubleChest) {
+            DoubleChest doubleChest = (DoubleChest) chest.getInventory().getHolder();
+
             chestInventory = doubleChest.getInventory();
-        } else {
-            chestInventory = chest.getBlockInventory();
         }
 
         // Calculate the available space for the item in the chest inventory
@@ -361,19 +414,13 @@ public class Minion {
 
     /**
      * Opgradere minionen for penge
-     * @return true hvis den successfully opgradere(aka: man har råd)
+     * @return true hvis den successfully opgradere(aka: man har r\u00E5d)
      */
     public boolean upgrade() {
+        if(level >= 20) return false;
         if(getInstance().economy.getBalance(Bukkit.getOfflinePlayer(UUID.fromString(uuidOfOwner))) >= calcUpgradeCost()) {
-            level++;
-            run();
             getInstance().economy.withdrawPlayer(getOwner(), calcUpgradeCost());
-            new InstantFirework(FireworkEffect.builder()
-                    .trail(true)
-                    .withColor(Color.RED, Color.YELLOW, Color.ORANGE)
-                    .build(),
-                    getMinion().getLocation()
-            );
+            forceUpgrade();
             return true;
         }
         return false;
@@ -383,11 +430,12 @@ public class Minion {
      */
     public void forceUpgrade(boolean silent) {
         level++;
+        updateHologram();
         run();
         if(!silent) {
             new InstantFirework(FireworkEffect.builder()
                     .trail(true)
-                    .withColor(Color.RED, Color.YELLOW, Color.ORANGE)
+                    .withColor(getAverageColorFromSkin())
                     .build(),
                     getMinion().getLocation()
             );
@@ -407,7 +455,7 @@ public class Minion {
 
 
     /**
-     * Spawner en minion ved dens gemte lokation, giver den average skin farve som lædder farve og hovdet af ejeren
+     * Spawner en minion ved dens gemte lokation, giver den average skin farve som l\u00E6dder farve og hovdet af ejeren
      */
     public void spawn() {
         Location spawnLocation = new Location(getWorld(), x, y, z);
@@ -424,17 +472,54 @@ public class Minion {
         minion.setLeggings(getLeggings());
         minion.setBoots(getBoots());
         minion.setItemInHand(getTool());
+
+        Location hologramLocation = getMinion().getEyeLocation().clone();
+        hologramLocation.add(new Vector(0, 0.75, 0));
+        String name;
+        switch (getType()) {
+            case SELL:
+                name = "SELL";
+                break;
+            case ATTACK:
+                name = "ATTACK";
+                break;
+            case DIG:
+                name = "DIG";
+                break;
+            default:
+                name = "PICKUP";
+                break;
+        }
+
+        hologram = api.createHologram(hologramLocation);
+        hologram.getLines().appendText(ChatColor.translateAlternateColorCodes('&', "&7&l" + getOwner().getName() + "'s Minion"));
+        hologram.getLines().appendText(ChatColor.translateAlternateColorCodes('&', "&8&l[ &f" + name + " lvl. " + level + " &8&l]"));
+
+
     }
 
-    /**
-     * Stopper en minion fra at køre tasks
-     */
-    public void disable() {
-        this.isDisabled = true;
-    }
 
-    public boolean isDisabled() {
-        return isDisabled;
+    public void updateHologram() {
+        if(hologram == null) return;
+
+        String name;
+        switch (getType()) {
+            case SELL:
+                name = "SELL";
+                break;
+            case ATTACK:
+                name = "ATTACK";
+                break;
+            case DIG:
+                name = "DIG";
+                break;
+            default:
+                name = "PICKUP";
+                break;
+        }
+        hologram.getLines().clear();
+        hologram.getLines().appendText(ChatColor.translateAlternateColorCodes('&', "&7&l" + getOwner().getName() + "'s Minion"));
+        hologram.getLines().appendText(ChatColor.translateAlternateColorCodes('&', "&8&l[ &f" + name + " lvl. " + level + " &8&l]"));
     }
 
     public ItemStack getTool() {
@@ -539,7 +624,7 @@ public class Minion {
 
 
     /**
-     * Får gennemsnitlig skin farve ved at scanne hver pixel i ejerens skin og dividere det med hvor mange pixels skinnet er
+     * F\u00E5r gennemsnitlig skin farve ved at scanne hver pixel i ejerens skin og dividere det med hvor mange pixels skinnet er
      * @return Gennemsnitlig skin farve
      */
     public Color getAverageColorFromSkin() {
@@ -598,7 +683,12 @@ public class Minion {
         return Bukkit.getPlayer(UUID.fromString(uuidOfOwner));
     }
     public int getCooldown() {
-        return 60 - (Math.min(10, level) * 2);
+        // Ensure level is within the valid range (0 to 20)
+        int validLevel = Math.max(0, Math.min(level, 20));
+
+        int cooldown = 60 - validLevel * 2;
+
+        return cooldown;
     }
     public minionType getType() {
         switch (type) {
@@ -624,6 +714,10 @@ public class Minion {
             default:
                 return 4;
         }
+    }
+
+    public boolean isRunning() {
+        return this.isRunning;
     }
 
     public int getLevel() {
@@ -654,13 +748,16 @@ public class Minion {
         return chestZ;
     }
 
-    public void remove() {
-        getMinion().remove();
-        disable();
-        if(getWorld().getBlockAt(getChestLocation()).getType().equals(Material.CHEST)) {
-            getWorld().getBlockAt(getChestLocation()).breakNaturally();
+    public void remove(boolean permanent) {
+        if(getMinion() != null) {
+            getMinion().remove();
         }
-        getInstance().minions.remove(this);
+        if(hologram != null) {
+            hologram.delete();
+        }
+        isRunning = false;
+        if(permanent)getInstance().minions.remove(this);
+
     }
 
     public Location getChestLocation() {
@@ -695,6 +792,12 @@ public class Minion {
         return minion.orElse(null);
     }
 
+    public void setChestLoc(Location in) {
+        this.chestX = in.getBlockX();
+        this.chestY = in.getBlockY();
+        this.chestZ = in.getBlockZ();
+    }
+
 
     public int getBlocksBroken() {
         return this.blocksBroken;
@@ -714,6 +817,9 @@ public class Minion {
     }
     public void addItemsPickupUp(int margin) {
         this.itemsPickedUp += margin;
+    }
+    public void addSecondsAlive(int margin) {
+        this.secondsAlive += margin;
     }
 
 }

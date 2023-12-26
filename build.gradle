@@ -8,6 +8,7 @@ version = '1.0'
 
 repositories {
     mavenCentral()
+    maven { url 'https://repo.bg-software.com/repository/api/' }
     maven {
         name = "spigotmc-repo"
         url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
@@ -27,6 +28,7 @@ repositories {
     maven {
         url "https://repo.codemc.io/repository/maven-public/"
     }
+    maven { url 'https://repo.bg-software.com/repository/api/' }
     mavenLocal();
 }
 
@@ -35,6 +37,8 @@ dependencies {
     compileOnly 'com.github.MilkBowl:VaultAPI:1.7'
     compileOnly 'dk.wavebleak:Sell:1.0'
     compileOnly 'me.filoghost.holographicdisplays:holographicdisplays-api:3.0.0'
+    compileOnly 'com.bgsoftware:WildStackerAPI:2023.3'
+    compileOnly 'com.bgsoftware:SuperiorSkyblockAPI:2023.3'
 
 }
 

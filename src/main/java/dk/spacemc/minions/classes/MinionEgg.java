@@ -13,10 +13,11 @@ import java.util.Collections;
 
 public class MinionEgg {
 
-    private ItemStack egg;
+    private final ItemStack egg;
 
-    public MinionEgg(Minion.minionType type) {
-        ItemStack egg = new ItemStack(Material.MONSTER_EGG);
+
+    public MinionEgg(Minion.minionType type, int level, int blocksBroken, int entitiesKilled, int itemsPickedUp, int itemsSold, int secondsAlive) {
+        ItemStack egg = new ItemStack(Material.MONSTER_EGG, 1, (byte) 4);
         ItemMeta meta = egg.getItemMeta();
 
         String name;
@@ -35,7 +36,7 @@ public class MinionEgg {
                 break;
         }
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&a" + name + " Minion"));
-        meta.setLore(Collections.singletonList(ChatColor.translateAlternateColorCodes('&', "&8" + type.name())));
+        meta.setLore(Arrays.asList(ChatColor.translateAlternateColorCodes('&', "&8" + type.name()), ChatColor.translateAlternateColorCodes('&', "&8" + level), ChatColor.translateAlternateColorCodes('&', "&8" + blocksBroken), ChatColor.translateAlternateColorCodes('&', "&8" + entitiesKilled), ChatColor.translateAlternateColorCodes('&', "&8" + itemsPickedUp), ChatColor.translateAlternateColorCodes('&', "&8" + itemsSold), ChatColor.translateAlternateColorCodes('&', "&8" + secondsAlive)));
 
         egg.setItemMeta(meta);
 

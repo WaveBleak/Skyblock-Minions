@@ -1,13 +1,23 @@
 package dk.spacemc.minions.utils;
 
+import com.bgsoftware.superiorskyblock.api.SuperiorSkyblockAPI;
+import com.bgsoftware.superiorskyblock.api.island.Island;
+import com.bgsoftware.superiorskyblock.api.wrappers.SuperiorPlayer;
 import net.milkbowl.vault.economy.Economy;
+import net.minecraft.server.v1_8_R3.IChatBaseComponent;
+import net.minecraft.server.v1_8_R3.PacketPlayOutTitle;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static dk.spacemc.minions.Minions.getInstance;
 import static org.bukkit.Bukkit.getServer;
@@ -96,5 +106,44 @@ public class Util {
             return formattedSeconds + " " + secondText;
         }
     }
+
+    public static void sendTitle(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
+        CraftPlayer craftPlayer = (CraftPlayer) player;
+        IChatBaseComponent titleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + ChatColor.translateAlternateColorCodes('&', title) + "\"}");
+        IChatBaseComponent subtitleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + ChatColor.translateAlternateColorCodes('&', subtitle) + "\"}");
+
+        PacketPlayOutTitle titlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, titleComponent);
+        PacketPlayOutTitle subtitlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE, subtitleComponent);
+        PacketPlayOutTitle lengthPacket = new PacketPlayOutTitle(fadeIn, stay, fadeOut);
+
+        craftPlayer.getHandle().playerConnection.sendPacket(titlePacket);
+        craftPlayer.getHandle().playerConnection.sendPacket(subtitlePacket);
+        craftPlayer.getHandle().playerConnection.sendPacket(lengthPacket);
+    }
+
+
+    public static boolean canPlaceMinion(Player player, Location location) {
+        if(player.isOp()) return true;
+
+        Island island = SuperiorSkyblockAPI.getIslandAt(location);
+
+        if(island == null) return false;
+
+        List<SuperiorPlayer> members = island.getIslandMembers(true);
+
+
+        if(members.stream().anyMatch(x -> {
+            Player memberPlayer = Bukkit.getPlayer(x.getUniqueId());
+            if(memberPlayer.equals(player)) {
+                return true;
+            } else {
+                return false;
+            }
+        })) {
+            return true;
+        }
+        return false;
+    }
+
 
 }

@@ -32,7 +32,8 @@ public class MinionGUIChangeEvent implements Listener {
         if(!Minions.getInstance().inventoryManager.get(player).getInventory().equals(event.getInventory())) {
             return;
         }
-        Minions.getInstance().inventoryManager.get(player).getLambda().run(event.getSlot());
+        event.setCancelled(true);
+        Minions.getInstance().inventoryManager.get(player).getLambda().run(event);
     }
 
 }

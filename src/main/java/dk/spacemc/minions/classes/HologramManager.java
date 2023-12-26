@@ -24,7 +24,7 @@ public class HologramManager {
      * Hologram constructer
      * @param text Den text hologrammet har, farvet
      * @param location Start lokation
-     * @param up Hvor langt op den skal gå
+     * @param up Hvor langt op den skal g\u00E5
      * @param small Om det er et lille hologram
      */
     public HologramManager(String text, Location location, double up, boolean small) {
@@ -39,7 +39,7 @@ public class HologramManager {
      * Hologram constructer
      * @param text Den text hologrammet har, farvet
      * @param location Lokation
-     * @param lifeTime Hvor mange ticks den skal leve i, 0 hvis den aldrig skal dø
+     * @param lifeTime Hvor mange ticks den skal leve i, 0 hvis den aldrig skal d\u00F8
      * @param small Om det er et lille hologram
      */
     public HologramManager(String text, Location location, int lifeTime, boolean small) {

@@ -1,8 +1,6 @@
 package dk.spacemc.minions.utils;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import dk.spacemc.minions.classes.Minion;
 
@@ -45,7 +43,30 @@ public class Manager {
     }
 
     public void saveData(List<Minion> data) {
-        Gson gson = new GsonBuilder().registerTypeAdapter(Minion.class, new MinionSerializer()).create();
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(Minion.class, (JsonSerializer<Minion>) (minion, typeOfSrc, context) -> {
+                    JsonObject jsonObject = new JsonObject();
+
+                    jsonObject.addProperty("level", minion.getLevel());
+                    jsonObject.addProperty("type", Minion.getType(minion.getType()));
+                    jsonObject.addProperty("uuidOfOwner", minion.getUuidOfOwner());
+                    jsonObject.addProperty("x", minion.getX());
+                    jsonObject.addProperty("y", minion.getY());
+                    jsonObject.addProperty("z", minion.getZ());
+                    jsonObject.addProperty("chestX", minion.getChestX());
+                    jsonObject.addProperty("chestY", minion.getChestY());
+                    jsonObject.addProperty("chestZ", minion.getChestZ());
+                    jsonObject.addProperty("yaw", minion.getYaw());
+                    jsonObject.addProperty("world", minion.getWorld().getName());
+                    jsonObject.addProperty("blocksBroken", minion.getBlocksBroken());
+                    jsonObject.addProperty("entitiesKilled", minion.getEntitiesKilled());
+                    jsonObject.addProperty("itemsSold", minion.getItemsSold());
+                    jsonObject.addProperty("itemsPickedUp", minion.getItemsPickedUp());
+                    jsonObject.addProperty("secondsAlive", minion.getSecondsAlive());
+                    jsonObject.addProperty("isRunning", minion.isRunning());
+
+                    return jsonObject;
+                }).create();
         dataArray = gson.toJsonTree(data).getAsJsonArray();
         saveJsonToFile(dataArray);
     }
