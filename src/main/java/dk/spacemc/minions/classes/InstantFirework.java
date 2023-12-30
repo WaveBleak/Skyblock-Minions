@@ -1,5 +1,6 @@
 package dk.spacemc.minions.classes;
 
+import net.minecraft.server.v1_8_R3.EntityFireworks;
 import org.bukkit.Bukkit;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Location;

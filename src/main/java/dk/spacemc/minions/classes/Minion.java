@@ -45,6 +45,9 @@ import java.util.stream.Collectors;
 import static dk.spacemc.minions.Minions.api;
 import static dk.spacemc.minions.Minions.getInstance;
 
+/**
+ * The Minion class represents a minion with various attributes and actions.
+ */
 public class Minion {
     public int getItemsSold() {
         return itemsSold;
@@ -101,18 +104,20 @@ public class Minion {
         this(level, getType(type), owner.getUniqueId().toString(), spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ(), chestLoc.getBlockX(), chestLoc.getBlockY(), chestLoc.getBlockZ(), yaw, spawnLoc.getWorld().getName());
     }
 
+
     /**
-     * Constructor for minions
-     * @param level Minionens level
-     * @param type Minionens type
-     * @param uuidOfOwner Ejerens UUID
-     * @param x x-koordinatet af minionen
-     * @param y y-koordinatet af minionen
-     * @param z z-koordinatet af minionen
-     * @param chestX x-koordinatet af minionen's associeret kiste
-     * @param chestY y-koordinatet af minionen's associeret kiste
-     * @param chestZ z-koordinatet af minionen's associeret kiste
-     * @param world navnet p\u00E5 verdenen minionen er i
+     * Constructor for Minion.
+     * @param level The level of the Minion.
+     * @param type The type of the Minion.
+     * @param uuidOfOwner The UUID of the owner of the Minion.
+     * @param x The x-coordinate of the Minion's spawn location.
+     * @param y The y-coordinate of the Minion's spawn location.
+     * @param z The z-coordinate of the Minion's spawn location.
+     * @param chestX The x-coordinate of the Minion's chest location.
+     * @param chestY The y-coordinate of the Minion's chest location.
+     * @param chestZ The z-coordinate of the Minion's chest location.
+     * @param yaw The yaw/direction of the Minion.
+     * @param world The name of the world the Minion is in.
      */
     public Minion(int level, int type, String uuidOfOwner, double x, double y, double z, double chestX, double chestY, double chestZ, double yaw, String world) {
         this.level = level;
@@ -365,7 +370,7 @@ public class Minion {
         this.itemsSold += itemsSold;
 
         if(profit > 0) {
-            new HologramManager("&a+ " + profit + "$", getMinion().getEyeLocation().add(0, 1.75, 0), 1D, false).spawn();
+            new HologramManager("&a+ " + profit + "$", getMinion().getEyeLocation().add(0, 1.75, 0), 1D).spawn();
 
         }
 
@@ -413,8 +418,9 @@ public class Minion {
     }
 
     /**
-     * Opgradere minionen for penge
-     * @return true hvis den successfully opgradere(aka: man har r\u00E5d)
+     * Upgrades the minion if the level is below 20 and the owner has enough balance.
+     *
+     * @return true if the upgrade was successful, false otherwise.
      */
     public boolean upgrade() {
         if(level >= 20) return false;
@@ -426,7 +432,10 @@ public class Minion {
         return false;
     }
     /**
-     * Opgradere minionen lige gyldigt hvad
+     * Upgrades the minion regardless of its current level. If the optional silent parameter is set to true, a firework is
+     * launched to indicate the upgrade. Otherwise, no visual effect is displayed.
+     *
+     * @param silent If true, no visual effect is displayed. If false, a firework is launched to indicate the upgrade.
      */
     public void forceUpgrade(boolean silent) {
         level++;
@@ -435,7 +444,7 @@ public class Minion {
         if(!silent) {
             new InstantFirework(FireworkEffect.builder()
                     .trail(true)
-                    .withColor(getAverageColorFromSkin())
+                    .withColor(getTop3ColorsFromSkin())
                     .build(),
                     getMinion().getLocation()
             );
@@ -455,7 +464,9 @@ public class Minion {
 
 
     /**
-     * Spawner en minion ved dens gemte lokation, giver den average skin farve som l\u00E6dder farve og hovdet af ejeren
+     * Spawns a minion at the specified location.
+     * Sets the properties of the minion such as basePlate, small, gravity, arms, helmet, chestplate, leggings, boots, and itemInHand.
+     * Creates a hologram above the minion with the owner's name and minion's type and level.
      */
     public void spawn() {
         Location spawnLocation = new Location(getWorld(), x, y, z);
@@ -559,7 +570,7 @@ public class Minion {
         return setAverageColor(new ItemStack(Material.LEATHER_BOOTS));
     }
     public ItemStack setAverageColor(ItemStack leatherArmor) {
-        Color color = getAverageColorFromSkin();
+        Color color = getTop3ColorsFromSkin()[0];
         LeatherArmorMeta meta = (LeatherArmorMeta) leatherArmor.getItemMeta();
         meta.setColor(color);
         leatherArmor.setItemMeta(meta);
@@ -586,6 +597,13 @@ public class Minion {
         return skullItem;
     }
 
+    /**
+     * Retrieves the texture value from the Minecraft session server for a given Minion's owner.
+     * The texture value is used to create a custom skull item with the owner's skin texture.
+     * The texture value is obtained by making a GET request to the Minecraft session server API.
+     *
+     * @return The texture value as a string, or null if there was an error retrieving the value.
+     */
     public String getTextureValue() {
         String url = "https://sessionserver.mojang.com/session/minecraft/profile/" + uuidOfOwner;
 
@@ -623,52 +641,44 @@ public class Minion {
     }
 
 
-    /**
-     * F\u00E5r gennemsnitlig skin farve ved at scanne hver pixel i ejerens skin og dividere det med hvor mange pixels skinnet er
-     * @return Gennemsnitlig skin farve
-     */
-    public Color getAverageColorFromSkin() {
+    public Color[] getTop3ColorsFromSkin() {
         String skinURL = "https://mineskin.eu/skin/" + uuidOfOwner;
+        Map<Integer, Integer> colorFrequency = new HashMap<>();
         try {
             URL url = new URL(skinURL);
             BufferedImage image = ImageIO.read(url);
-
-            int width = image.getWidth();
-            int height = image.getHeight();
-            int totalPixels = 0;
-            long redSum = 0;
-            long greenSum = 0;
-            long blueSum = 0;
-
-            for(int y = 0; y < height; y++) {
-                for(int x = 0; x < width; x++) {
+            for (int y = 0; y < image.getHeight(); y++) {
+                for (int x = 0; x < image.getWidth(); x++) {
                     int rgb = image.getRGB(x, y);
-                    int alpha = (rgb >> 24) & 0xFF;
-                    int red = (rgb >> 16) & 0xFF;
-                    int green = (rgb >> 8) & 0xFF;
-                    int blue = rgb & 0xFF;
-
-                    if(alpha == 0) continue;
-
-                    totalPixels++;
-                    redSum += red;
-                    greenSum += green;
-                    blueSum += blue;
+                    colorFrequency.put(rgb, colorFrequency.getOrDefault(rgb, 0) + 1);
                 }
             }
-            if(redSum == 0) redSum = 1;
-            if(greenSum == 0) greenSum = 1;
-            if(blueSum == 0) blueSum = 1;
 
-            int avgRed = (int) (redSum / totalPixels);
-            int avgGreen = (int) (greenSum / totalPixels);
-            int avgBlue = (int) (blueSum / totalPixels);
+            PriorityQueue<Map.Entry<Integer, Integer>> topColors =
+                    new PriorityQueue<Map.Entry<Integer, Integer>>(3, Comparator.comparing(Map.Entry::getValue));
 
-            return Color.fromRGB(avgRed, avgGreen, avgBlue);
-        }catch (Exception e) {
+            for (Map.Entry<Integer, Integer> entry : colorFrequency.entrySet()) {
+                topColors.offer(entry);
+                while (topColors.size() > 3) {
+                    topColors.poll();
+                }
+            }
+
+            int index = 2;
+            Color[] topThreeColors = new Color[3];
+            while (!topColors.isEmpty()) {
+                int rgb = topColors.poll().getKey();
+                int red = (rgb >> 16) & 0xFF;
+                int green = (rgb >> 8) & 0xFF;
+                int blue = rgb & 0xFF;
+                topThreeColors[index] = Color.fromRGB(red, green, blue);
+                index--;
+            }
+            return topThreeColors;
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return Color.fromRGB(0, 0, 0);
+        return new Color[]{Color.fromRGB(0, 0, 0), Color.fromRGB(0, 0, 0), Color.fromRGB(0, 0, 0)};
     }
 
 
@@ -686,9 +696,7 @@ public class Minion {
         // Ensure level is within the valid range (0 to 20)
         int validLevel = Math.max(0, Math.min(level, 20));
 
-        int cooldown = 60 - validLevel * 2;
-
-        return cooldown;
+        return 60 - validLevel * 2;
     }
     public minionType getType() {
         switch (type) {

@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Documents.GitHub.Skyblock-Minions.Minions.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Documents.GitHub.Skyblock-Minions.Minions.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/GitHub.Skyblock-Minions.Minions.main.iml" filepath="$PROJECT_DIR$/.idea/modules/GitHub.Skyblock-Minions.Minions.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Minions.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Minions.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Skyblock-Minions.Minions.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Skyblock-Minions.Minions.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/dk.space-mc.Minions.main.iml" filepath="$PROJECT_DIR$/.idea/modules/dk.space-mc.Minions.main.iml" />

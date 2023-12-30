@@ -12,35 +12,42 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class MinionEgg {
-
     private final ItemStack egg;
-
 
     public MinionEgg(Minion.minionType type, int level, int blocksBroken, int entitiesKilled, int itemsPickedUp, int itemsSold, int secondsAlive) {
         ItemStack egg = new ItemStack(Material.MONSTER_EGG, 1, (byte) 4);
-        ItemMeta meta = egg.getItemMeta();
+        ItemMeta eggMeta = egg.getItemMeta();
 
-        String name;
+        String minionName = getMinionName(type);
+        eggMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&a" + minionName + " Minion"));
+
+        eggMeta.setLore(Arrays.asList(generateLore("&8", type.name()),
+                generateLore("&8", Integer.toString(level)),
+                generateLore("&8", Integer.toString(blocksBroken)),
+                generateLore("&8", Integer.toString(entitiesKilled)),
+                generateLore("&8", Integer.toString(itemsPickedUp)),
+                generateLore("&8", Integer.toString(itemsSold)),
+                generateLore("&8", Integer.toString(secondsAlive))));
+
+        egg.setItemMeta(eggMeta);
+        this.egg = egg;
+    }
+
+    private String getMinionName(Minion.minionType type) {
         switch (type) {
             case SELL:
-                name = "Sell";
-                break;
+                return "Sell";
             case ATTACK:
-                name = "Attack";
-                break;
+                return "Attack";
             case DIG:
-                name = "Dig";
-                break;
+                return "Dig";
             default:
-                name = "Pickup";
-                break;
+                return "Pickup";
         }
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&a" + name + " Minion"));
-        meta.setLore(Arrays.asList(ChatColor.translateAlternateColorCodes('&', "&8" + type.name()), ChatColor.translateAlternateColorCodes('&', "&8" + level), ChatColor.translateAlternateColorCodes('&', "&8" + blocksBroken), ChatColor.translateAlternateColorCodes('&', "&8" + entitiesKilled), ChatColor.translateAlternateColorCodes('&', "&8" + itemsPickedUp), ChatColor.translateAlternateColorCodes('&', "&8" + itemsSold), ChatColor.translateAlternateColorCodes('&', "&8" + secondsAlive)));
+    }
 
-        egg.setItemMeta(meta);
-
-        this.egg = egg;
+    private String generateLore(String colorCode, String inputString) {
+        return ChatColor.translateAlternateColorCodes('&', colorCode + inputString);
     }
 
     public ItemStack getEgg() {

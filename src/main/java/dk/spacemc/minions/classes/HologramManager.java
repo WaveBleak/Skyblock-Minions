@@ -21,36 +21,36 @@ public class HologramManager {
 
 
     /**
-     * Hologram constructer
-     * @param text Den text hologrammet har, farvet
-     * @param location Start lokation
-     * @param up Hvor langt op den skal g\u00E5
-     * @param small Om det er et lille hologram
+     * Creates a new HologramManager object.
+     *
+     * @param text     The text that the hologram will display, can include color codes.
+     * @param location The location where the hologram will be spawned.
+     * @param up       The distance (in blocks) that the hologram will move upwards. Set to 0 for no movement.
      */
-    public HologramManager(String text, Location location, double up, boolean small) {
+    public HologramManager(String text, Location location, double up) {
         this.text = text;
         this.location = location;
         this.up = up;
-        this.small = small;
         this.lifteTime = 0;
     }
 
     /**
-     * Hologram constructer
-     * @param text Den text hologrammet har, farvet
-     * @param location Lokation
-     * @param lifeTime Hvor mange ticks den skal leve i, 0 hvis den aldrig skal d\u00F8
-     * @param small Om det er et lille hologram
+     * Creates a new HologramManager object.
+     *
+     * @param text     The text that the hologram will display, can include color codes.
+     * @param location The location where the hologram will be spawned.
      */
-    public HologramManager(String text, Location location, int lifeTime, boolean small) {
+    public HologramManager(String text, Location location, int lifeTime) {
         this.text = text;
         this.location = location;
         this.up = 0;
-        this.small = small;
         this.lifteTime = lifeTime;
     }
 
 
+    /**
+     * Spawns a hologram at the specified location with the specified text. The hologram can move upwards or have a limited lifetime.
+     */
     public void spawn() {
         Hologram hologram = api.createHologram(location);
 

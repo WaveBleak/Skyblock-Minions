@@ -5,6 +5,7 @@ import dk.spacemc.minions.classes.Minion;
 import dk.wavebleak.sell.SellManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.event.EventHandler;
@@ -13,11 +14,13 @@ import org.bukkit.event.block.BlockBreakEvent;
 
 public class ChestBreakEvent implements Listener {
 
+    private boolean test;
+
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
         event.setCancelled(true);
 
-        boolean test = false;
+        test = false;
 
         for(Minion minion : Minions.getInstance().minions) {
             Chest chest = minion.getChest();
@@ -31,35 +34,14 @@ public class ChestBreakEvent implements Listener {
             if(!event.getBlock().getType().equals(Material.CHEST)) continue;
             if(!(((Chest)event.getBlock().getState()).getInventory().getHolder() instanceof DoubleChest)) continue;
 
-            Location location1 = event.getBlock().getLocation().add(-1, 0, 0);
-            Location location2 = event.getBlock().getLocation().add(1, 0, 0);
-            Location location3 = event.getBlock().getLocation().add(0, 0, -1);
-            Location location4 = event.getBlock().getLocation().add(0, 0, 1);
+            Location blockLocation = event.getBlock().getLocation();
+            int[][] directions = {{-1, 0, 0}, {1, 0, 0}, {0, 0, -1}, {0, 0, 1}};
 
-            if(((Chest)location1.getBlock().getState()).getInventory().getHolder() instanceof DoubleChest) {
-                if(location1.getBlock().equals(chest.getBlock())) {
-                    SellManager.sendPlayerMessage(event.getPlayer(), "&cDu kan ikke smadre en kiste som er forbundet en minion!");
-                    test = true;
-                }
+            for (int[] direction : directions) {
+                Location neighbourLocation = blockLocation.clone().add(direction[0], direction[1], direction[2]);
+                handleChest(neighbourLocation, chest, event);
             }
-            if(((Chest)location2.getBlock().getState()).getInventory().getHolder() instanceof DoubleChest) {
-                if(location2.getBlock().equals(chest.getBlock())) {
-                    SellManager.sendPlayerMessage(event.getPlayer(), "&cDu kan ikke smadre en kiste som er forbundet en minion!");
-                    test = true;
-                }
-            }
-            if(((Chest)location3.getBlock().getState()).getInventory().getHolder() instanceof DoubleChest) {
-                if(location3.getBlock().equals(chest.getBlock())) {
-                    SellManager.sendPlayerMessage(event.getPlayer(), "&cDu kan ikke smadre en kiste som er forbundet en minion!");
-                    test = true;
-                }
-            }
-            if(((Chest)location4.getBlock().getState()).getInventory().getHolder() instanceof DoubleChest) {
-                if(location4.getBlock().equals(chest.getBlock())) {
-                    SellManager.sendPlayerMessage(event.getPlayer(), "&cDu kan ikke smadre en kiste som er forbundet en minion!");
-                    test = true;
-                }
-            }
+
         }
         if(!test) {
             event.setCancelled(false);
@@ -67,4 +49,17 @@ public class ChestBreakEvent implements Listener {
 
     }
 
+
+    public void handleChest(Location location, Chest chest, BlockBreakEvent event) {
+        BlockState blockState = location.getBlock().getState();
+        if (blockState instanceof Chest) {
+            Chest currentChest = (Chest) blockState;
+            if (currentChest.getInventory().getHolder() instanceof DoubleChest) {
+                if (location.getBlock().equals(chest.getBlock())) {
+                    SellManager.sendPlayerMessage(event.getPlayer(), "&cDu kan ikke smadre en kiste som er forbundet en minion!");
+                    test = true;
+                }
+            }
+        }
+    }
 }
